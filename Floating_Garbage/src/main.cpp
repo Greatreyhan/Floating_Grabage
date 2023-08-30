@@ -15,6 +15,9 @@
 SoftwareSerial mySerial = SoftwareSerial(rxPin, txPin);
 LiquidCrystal_I2C lcd(0x27, 20, 4);
 
+unsigned long previousMillis = 0; // Stores the last time the LED was updated
+const long interval = 500;
+
 MAX6675 thermocoupleA(thermoCLKA, thermoCSA, thermoDOA);
 MAX6675 thermocoupleB(thermoCLKB, thermoCSB, thermoDOB);
 volatile int dist = 0;
@@ -31,6 +34,7 @@ void setup()
 
 void loop()
 {
+  unsigned long currentMillis = millis(); // Get the current time
   static String receivedData;
   if (mySerial.available())
   {
@@ -39,31 +43,32 @@ void loop()
     if (receivedChar == 13)
     { // Check for CR termination
       dist = receivedData.toInt();
-      Serial.println(dist);
-      lcd.clear();
-      lcd.setCursor(0, 0);
-      lcd.print("T1 = ");
-      lcd.setCursor(4, 0);
-      lcd.print(thermocoupleA.readCelsius());
-      lcd.setCursor(0, 1);
-      lcd.print("T2 = ");
-      lcd.setCursor(4, 1);
-      lcd.print(thermocoupleB.readCelsius());
-      lcd.setCursor(0, 2);
-      lcd.print("D = ");
-      lcd.setCursor(4, 2);
-      lcd.print(dist);
-      lcd.setCursor(0, 3);
-      lcd.print("MQ = ");
-      lcd.setCursor(4, 3);
-      lcd.print(analogRead(MQ));
-      // For the MAX6675 to update, you must delay AT LEAST 250ms between reads!
-      delay(1000);
-      receivedData = ""; // Clear the data buffer
+      receivedData = ""; 
     }
     else
     {
       receivedData += receivedChar; // Append character to data buffer
     }
+  }
+  if (currentMillis - previousMillis >= interval)
+  {
+    previousMillis = currentMillis;
+    lcd.clear();
+    lcd.setCursor(0, 0);
+    lcd.print("T1 = ");
+    lcd.setCursor(4, 0);
+    lcd.print(thermocoupleA.readCelsius());
+    lcd.setCursor(0, 1);
+    lcd.print("T2 = ");
+    lcd.setCursor(4, 1);
+    lcd.print(thermocoupleB.readCelsius());
+    lcd.setCursor(0, 2);
+    lcd.print("D = ");
+    lcd.setCursor(4, 2);
+    lcd.print(dist);
+    lcd.setCursor(0, 3);
+    lcd.print("MQ = ");
+    lcd.setCursor(4, 3);
+    lcd.print(analogRead(MQ));
   }
 }
