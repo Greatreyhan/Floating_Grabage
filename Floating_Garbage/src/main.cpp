@@ -2,15 +2,17 @@
 #include <LiquidCrystal_I2C.h>
 #include <SoftwareSerial.h>
 
-#define thermoDOA 4
-#define thermoCSA 5
-#define thermoCLKA 6
-#define thermoDOB 7
-#define thermoCSB 8
-#define thermoCLKB 9
-#define rxPin 10
-#define txPin 11
-#define MQ A0
+#define thermoDOA   4
+#define thermoCSA   5
+#define thermoCLKA  6
+#define thermoDOB   7
+#define thermoCSB   8
+#define thermoCLKB  9
+#define rxPin       10
+#define txPin       11
+#define MQ          A0
+#define Buzzer      3
+#define LED         2
 
 SoftwareSerial mySerial = SoftwareSerial(rxPin, txPin);
 LiquidCrystal_I2C lcd(0x27, 20, 4);
@@ -30,6 +32,8 @@ void setup()
   pinMode(rxPin, INPUT);
   pinMode(txPin, OUTPUT);
   pinMode(MQ, INPUT);
+  pinMode(Buzzer, OUTPUT);
+  pinMode(LED, OUTPUT);
 }
 
 void loop()
@@ -44,6 +48,12 @@ void loop()
     { // Check for CR termination
       dist = receivedData.toInt();
       receivedData = ""; 
+      if(dist < 50){
+        digitalWrite(LED, HIGH);
+      }
+      else{
+        digitalWrite(LED, LOW);
+      }
     }
     else
     {
@@ -53,15 +63,23 @@ void loop()
   if (currentMillis - previousMillis >= interval)
   {
     previousMillis = currentMillis;
+    double tempA = thermocoupleA.readCelsius();
+    double tempB = thermocoupleB.readCelsius();
+    if(tempA > 120){
+      digitalWrite(Buzzer,HIGH);
+    }
+    else{
+      digitalWrite(Buzzer, LOW);
+    }
     lcd.clear();
     lcd.setCursor(0, 0);
     lcd.print("T1 = ");
     lcd.setCursor(4, 0);
-    lcd.print(thermocoupleA.readCelsius());
+    lcd.print(tempA);
     lcd.setCursor(0, 1);
     lcd.print("T2 = ");
     lcd.setCursor(4, 1);
-    lcd.print(thermocoupleB.readCelsius());
+    lcd.print(tempB);
     lcd.setCursor(0, 2);
     lcd.print("D = ");
     lcd.setCursor(4, 2);
